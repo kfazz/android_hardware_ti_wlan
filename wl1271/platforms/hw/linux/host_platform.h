@@ -64,10 +64,14 @@
 #define INT_MMC2_IRQ			86
 #define INT_MMC3_IRQ			94
 
-/* Zoom2 */
+/* Encore */
+#define PMENA_GPIO 22
+#define IRQ_GPIO 15
+
+/* Zoom2 
 #define PMENA_GPIO                      101
 #define IRQ_GPIO                        162
-
+*/
 /* Sholes */
 /*
 #define PMENA_GPIO                      186

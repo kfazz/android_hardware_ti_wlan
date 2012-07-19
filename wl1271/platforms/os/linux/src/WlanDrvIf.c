@@ -1073,7 +1073,6 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
 	kfree (drv);
 }
 
-
 /** 
  * \fn     wlanDrvIf_ModuleInit  &  wlanDrvIf_ModuleExit
  * \brief  Linux Init/Exit functions
@@ -1086,7 +1085,7 @@ static void wlanDrvIf_Destroy (TWlanDrvIfObj *drv)
  * \sa     wlanDrvIf_Create, wlanDrvIf_Destroy
  */ 
 #ifndef TI_SDIO_STANDALONE
-static int sdc_ctrl = 2;
+static int sdc_ctrl = 3;
 module_param(sdc_ctrl, int, S_IRUGO | S_IWUSR | S_IWGRP);
 
 extern int sdioDrv_init(int sdcnum);
