@@ -64,14 +64,16 @@
 #define INT_MMC2_IRQ			86
 #define INT_MMC3_IRQ			94
 
+#if ($(filter encore,$(TARGET_DEVICE)),)
 /* Encore */
 #define PMENA_GPIO 22
 #define IRQ_GPIO 15
-
-/* Zoom2 
+#else
+/* Zoom2 */
 #define PMENA_GPIO                      101
 #define IRQ_GPIO                        162
-*/
+#endif
+
 /* Sholes */
 /*
 #define PMENA_GPIO                      186
