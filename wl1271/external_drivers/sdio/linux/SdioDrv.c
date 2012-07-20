@@ -41,7 +41,11 @@
 #include <linux/types.h>
 #include <linux/dma-mapping.h>
 #include <linux/platform_device.h>
+#if ($(filter encore,$(TARGET_DEVICE)),)
 #include <linux/i2c/twl.h>
+#else
+#include <linux/i2c/twl4030.h>
+#endif
 #include <linux/errno.h>
 #include <linux/clk.h>
 #if (LINUX_VERSION_CODE > KERNEL_VERSION(2, 6, 31))
