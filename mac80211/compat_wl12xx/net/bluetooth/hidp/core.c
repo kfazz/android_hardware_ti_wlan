@@ -1329,49 +1329,16 @@ int hidp_get_conninfo(struct hidp_conninfo *ci)
 	return err;
 }
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-static const struct hid_device_id hidp_table[] = {
-	{ HID_BLUETOOTH_DEVICE(HID_ANY_ID, HID_ANY_ID) },
-	{ }
-};
-
-static struct hid_driver hidp_driver = {
-	.name = "generic-bluetooth",
-	.id_table = hidp_table,
-};
-#endif
-
 static int __init hidp_init(void)
 {
-	int ret;
-
 	BT_INFO("HIDP (Human Interface Emulation) ver %s", VERSION);
 
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-	ret = hid_register_driver(&hidp_driver);
-	if (ret)
-		goto err;
-#endif
-
-	ret = hidp_init_sockets();
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-	if (ret)
-		goto err_drv;
-
-	return 0;
-err_drv:
-	hid_unregister_driver(&hidp_driver);
-err:
-#endif
-	return ret;
+	return hidp_init_sockets();
 }
 
 static void __exit hidp_exit(void)
 {
 	hidp_cleanup_sockets();
-#if (LINUX_VERSION_CODE > KERNEL_VERSION(2,6,27))
-	hid_unregister_driver(&hidp_driver);
-#endif
 }
 
 module_init(hidp_init);

@@ -256,7 +256,7 @@ static const struct iw_ioctl_description standard_ioctl[] = {
 		.max_tokens	= sizeof(struct iw_pmksa),
 	},
 };
-static const unsigned standard_ioctl_num = ARRAY_SIZE(standard_ioctl);
+static const unsigned int standard_ioctl_num = ARRAY_SIZE(standard_ioctl);
 
 /*
  * Meta-data about all the additional standard Wireless Extension events
@@ -306,7 +306,7 @@ static const struct iw_ioctl_description standard_event[] = {
 		.max_tokens	= sizeof(struct iw_pmkid_cand),
 	},
 };
-static const unsigned standard_event_num = ARRAY_SIZE(standard_event);
+static const unsigned int standard_event_num = ARRAY_SIZE(standard_event);
 
 /* Size (in bytes) of various events */
 static const int event_type_size[] = {
@@ -430,7 +430,8 @@ static struct nlmsghdr *rtnetlink_ifinfo_prep(struct net_device *dev,
 	r->ifi_flags = dev_get_flags(dev);
 	r->ifi_change = 0;	/* Wireless changes don't affect those flags */
 
-	NLA_PUT_STRING(skb, IFLA_IFNAME, dev->name);
+	if (nla_put_string(skb, IFLA_IFNAME, dev->name))
+		goto nla_put_failure;
 
 	return nlh;
  nla_put_failure:
@@ -456,7 +457,7 @@ void wireless_send_event(struct net_device *	dev,
 	int hdr_len;				/* Size of the event header */
 	int wrqu_off = 0;			/* Offset in wrqu */
 	/* Don't "optimise" the following variable, it will crash */
-	unsigned	cmd_index;		/* *MUST* be unsigned */
+	unsigned int	cmd_index;		/* *MUST* be unsigned */
 	struct sk_buff *skb;
 	struct nlmsghdr *nlh;
 	struct nlattr *nla;
@@ -813,8 +814,10 @@ static int ioctl_standard_iw_point(struct iw_point *iwp, unsigned int cmd,
 		if (cmd == SIOCSIWENCODEEXT) {
 			struct iw_encode_ext *ee = (void *) extra;
 
-			if (iwp->length < sizeof(*ee) + ee->key_len)
-				return -EFAULT;
+			if (iwp->length < sizeof(*ee) + ee->key_len) {
+				err = -EFAULT;
+				goto out;
+			}
 		}
 	}
 
@@ -955,14 +958,7 @@ static int wireless_process_ioctl(struct net *net, struct ifreq *ifr,
 			return private(dev, iwr, cmd, info, handler);
 	}
 	/* Old driver API : call driver ioctl handler */
-#if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,29))
-	if (dev->netdev_ops->ndo_do_ioctl)
-		return dev->netdev_ops->ndo_do_ioctl(dev, ifr, cmd);
-#else
-	if (dev->do_ioctl)
-		return dev->do_ioctl(dev, ifr, cmd);
-#endif
-	return -EOPNOTSUPP;
+	return ndo_do_ioctl(dev, ifr, cmd);
 }
 
 /* If command is `set a parameter', or `get the encoding parameters',

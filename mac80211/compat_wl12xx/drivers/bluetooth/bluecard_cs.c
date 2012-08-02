@@ -243,7 +243,7 @@ static void bluecard_write_wakeup(bluecard_info_t *info)
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
 		register unsigned int iobase = info->p_dev->resource[0]->start;
 #else
-		register unsigned int iobase = info->p_dev->io.BasePort1;
+		unsigned int iobase = info->p_dev->io.BasePort1;
 #endif
 		register unsigned int offset;
 		register unsigned char command;
@@ -582,7 +582,7 @@ static irqreturn_t bluecard_interrupt(int irq, void *dev_inst)
 
 static int bluecard_hci_set_baud_rate(struct hci_dev *hdev, int baud)
 {
-	bluecard_info_t *info = (bluecard_info_t *)(hdev->driver_data);
+	bluecard_info_t *info = hci_get_drvdata(hdev);
 	struct sk_buff *skb;
 
 	/* Ericsson baud rate command */
@@ -630,7 +630,7 @@ static int bluecard_hci_set_baud_rate(struct hci_dev *hdev, int baud)
 
 static int bluecard_hci_flush(struct hci_dev *hdev)
 {
-	bluecard_info_t *info = (bluecard_info_t *)(hdev->driver_data);
+	bluecard_info_t *info = hci_get_drvdata(hdev);
 
 	/* Drop TX queue */
 	skb_queue_purge(&(info->txq));
@@ -641,7 +641,7 @@ static int bluecard_hci_flush(struct hci_dev *hdev)
 
 static int bluecard_hci_open(struct hci_dev *hdev)
 {
-	bluecard_info_t *info = (bluecard_info_t *)(hdev->driver_data);
+	bluecard_info_t *info = hci_get_drvdata(hdev);
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
 	unsigned int iobase = info->p_dev->resource[0]->start;
 #else
@@ -665,7 +665,7 @@ static int bluecard_hci_open(struct hci_dev *hdev)
 
 static int bluecard_hci_close(struct hci_dev *hdev)
 {
-	bluecard_info_t *info = (bluecard_info_t *)(hdev->driver_data);
+	bluecard_info_t *info = hci_get_drvdata(hdev);
 #if (LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,36))
 	unsigned int iobase = info->p_dev->resource[0]->start;
 #else
@@ -696,7 +696,7 @@ static int bluecard_hci_send_frame(struct sk_buff *skb)
 		return -ENODEV;
 	}
 
-	info = (bluecard_info_t *)(hdev->driver_data);
+	info = hci_get_drvdata(hdev);
 
 	switch (bt_cb(skb)->pkt_type) {
 	case HCI_COMMAND_PKT:
@@ -717,11 +717,6 @@ static int bluecard_hci_send_frame(struct sk_buff *skb)
 	bluecard_write_wakeup(info);
 
 	return 0;
-}
-
-
-static void bluecard_hci_destruct(struct hci_dev *hdev)
-{
 }
 
 
@@ -767,17 +762,14 @@ static int bluecard_open(bluecard_info_t *info)
 	info->hdev = hdev;
 
 	hdev->bus = HCI_PCCARD;
-	hdev->driver_data = info;
+	hci_set_drvdata(hdev, info);
 	SET_HCIDEV_DEV(hdev, &info->p_dev->dev);
 
 	hdev->open     = bluecard_hci_open;
 	hdev->close    = bluecard_hci_close;
 	hdev->flush    = bluecard_hci_flush;
 	hdev->send     = bluecard_hci_send_frame;
-	hdev->destruct = bluecard_hci_destruct;
 	hdev->ioctl    = bluecard_hci_ioctl;
-
-	hdev->owner = THIS_MODULE;
 
 	id = inb(iobase + 0x30);
 
